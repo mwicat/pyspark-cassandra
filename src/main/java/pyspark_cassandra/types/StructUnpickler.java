@@ -24,7 +24,7 @@ public abstract class StructUnpickler implements IObjectConstructor {
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Object construct(Object[] args) throws PickleException {
-		List<String> fieldNames = (ArrayList<String>) args[0];
+		List<String> fieldNames = args[0] instanceof List ? (List) args[0] : Types.toJavaList((Object[]) args[0]);
 		List<Object> fieldValues = args[1] instanceof List ? (List) args[1] : Types.toJavaList((Object[]) args[1]);
 
 		return this.construct(fieldNames, fieldValues);
