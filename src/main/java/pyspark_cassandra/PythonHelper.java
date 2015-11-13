@@ -109,7 +109,8 @@ public class PythonHelper {
 				.mapPartitions(new BatchPickle(), true);
 	}
 
-	public CassandraJavaPairRDD<Object, RawRow> joinWithCassandraTable(JavaRDD<byte[]> rdd, String keyspace, String table, String[] columns) {
+	public CassandraJavaPairRDD<Object, RawRow> joinWithCassandraTable(
+			JavaRDD<byte[]> rdd, String keyspace, String table, String[] columns, String[] joinColumns) {
 		RDDJavaFunctions<Object> crdd = CassandraJavaUtil.javaFunctions(rdd.flatMap(new BatchUnpickle()));
 
 		ColumnSelector cols = CassandraJavaUtil.allColumns;
@@ -117,12 +118,17 @@ public class PythonHelper {
 			cols = CassandraJavaUtil.someColumns(columns);
 		}
 
+		ColumnSelector joinCols = PartitionKeyColumns$.MODULE$;
+		if (joinColumns != null && joinColumns.length > 0) {
+			joinCols = CassandraJavaUtil.someColumns(joinColumns);
+		}
+
 		return crdd
 			.joinWithCassandraTable(
 				keyspace,
 				table,
 				cols,
-				PartitionKeyColumns$.MODULE$,
+				joinCols,
 				new DeferringRowReaderFactory(),
 				rowWriterFactory(null)
 				);

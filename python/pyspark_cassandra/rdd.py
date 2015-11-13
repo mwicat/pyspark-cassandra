@@ -244,7 +244,7 @@ def saveToCassandra(rdd, keyspace=None, table=None, columns=None, write_conf=Non
 			row_format
 		)
 
-def joinWithCassandraTable(rdd, keyspace, table, columns=None):
+def joinWithCassandraTable(rdd, keyspace, table, columns=None, join_columns=None):
 	'''
 		Reads from Cassanra all rows whose partition key matches the fields in the input rdd
 
@@ -273,6 +273,7 @@ def joinWithCassandraTable(rdd, keyspace, table, columns=None):
 		raise ValueError("table not set")
 
 	columns = as_java_array(rdd.ctx._gateway, "String", columns) if columns else None
+	join_columns = as_java_array(rdd.ctx._gateway, "String", join_columns) if join_columns else None
 
 	# create a helper object
 	helper = rdd.ctx._jvm.java.lang.Thread.currentThread().getContextClassLoader() \
@@ -283,7 +284,8 @@ def joinWithCassandraTable(rdd, keyspace, table, columns=None):
 			rdd._jrdd,
 			keyspace,
 			table,
-			columns
+			columns,
+			join_columns
 		)
 
 	return RDD(helper.parseRows(rdd_out, RowFormat.ROW), rdd.ctx)
