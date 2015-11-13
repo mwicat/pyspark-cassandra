@@ -244,3 +244,46 @@ def saveToCassandra(rdd, keyspace=None, table=None, columns=None, write_conf=Non
 			row_format
 		)
 
+def joinWithCassandraTable(rdd, keyspace, table, columns=None):
+	'''
+		Reads from Cassanra all rows whose partition key matches the fields in the input rdd
+
+		Arguments:
+		@param rdd(RDD):
+			The RDD to join to. Equals to self when invoking joinWithCassandraTable on a monkey patched RDD.
+		@param keyspace(string):in
+			The keyspace to join from
+		@param table(string):
+			The CQL table to join from.
+
+		Keyword arguments:
+		@param columns(iterable):
+			The columns to load, i.e. which keys to take from the dicts in the RDD.
+			If None given all columns are be stored.
+
+		@param write_conf(WriteConf):
+			A WriteConf object to use when saving to Cassandra
+
+	'''
+
+	if not keyspace:
+		raise ValueError("keyspace not set")
+
+	if not table:
+		raise ValueError("table not set")
+
+	columns = as_java_array(rdd.ctx._gateway, "String", columns) if columns else None
+
+	# create a helper object
+	helper = rdd.ctx._jvm.java.lang.Thread.currentThread().getContextClassLoader() \
+		.loadClass("pyspark_cassandra.PythonHelper").newInstance()
+
+	# delegate to helper
+	rdd_out=helper.joinWithCassandraTable(
+			rdd._jrdd,
+			keyspace,
+			table,
+			columns
+		)
+
+	return RDD(helper.parseRows(rdd_out, RowFormat.ROW), rdd.ctx)
