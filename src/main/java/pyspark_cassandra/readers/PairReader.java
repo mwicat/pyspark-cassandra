@@ -18,13 +18,15 @@ import com.datastax.spark.connector.cql.TableDef;
 
 public class PairReader implements Serializable, Function<Tuple2, Object > {
 	private static final long serialVersionUID = 1L;
+	private RowReader reader;
+
+	public PairReader(RowReader reader) {
+		this.reader = reader;
+	}
 
 	@Override
 	public Object call(Tuple2 pair) throws Exception {
-		return parse(pair);
+		return new Tuple2(pair._1, reader.call(pair._2));
 	}
 
-	public Object parse(Tuple2 pair) {
-		return pair._2;
-	}
 }

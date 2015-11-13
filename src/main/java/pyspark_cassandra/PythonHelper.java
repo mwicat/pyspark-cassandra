@@ -105,8 +105,7 @@ public class PythonHelper {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public JavaRDD<byte[]> parseRows(CassandraJavaPairRDD rdd, Integer rowFormat) {
 		return rdd
-				.map(new PairReader())
-				.map(rowParser(rowFormat))
+				.map(new PairReader(rowParser(rowFormat)))
 				.mapPartitions(new BatchPickle(), true);
 	}
 
